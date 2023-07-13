@@ -35,16 +35,17 @@ public class MapReduce {
 	job.setJobName("MapReduce Step 1");
 	
 	
+	FileInputFormat.addInputPath(job, covid);
+    	job.setInputFormatClass(TextInputFormat.class);
 	
-	
-	
+	job.setMapperClass(CovidMapper.class);
 	job.setReducerClass(StateReducer.class);
 	
 	job.setOutputKeyClass(Text.class);
 	job.setOutputValueClass(IntWritable.class);
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	job.setOutputFormatClass(TextOutputFormat.class);
 
-	MultipleInputs.addInputPath(job, covid, TextInputFormat.class, CovidMapper.class);
+//	MultipleInputs.addInputPath(job, covid, TextInputFormat.class, CovidMapper.class);
 
 	job.setMapOutputKeyClass(Text.class);
 	job.setMapOutputValueClass(IntWritable.class);

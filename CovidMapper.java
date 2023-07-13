@@ -15,11 +15,15 @@ public class CovidMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
   public void map(LongWritable key, Text value, Context context) 
   throws java.io.IOException, InterruptedException {
     String[] record = value.toString().split(",");
+    String date = record[0];
     String state = record[2];
     int cases = Integer.parseInt(record[4]);
-    outKey.set(state);
-    outValue.set(cases);
-    context.write(outKey, outValue);
+    if (date.equals("2020-12-31")) {
+	    outKey.set(state);
+	    outValue.set(cases);
+	    // System.out.println("key: "+outKey+" val: "+outValue);
+	    context.write(outKey, outValue);
+	}
   }
 
 }
