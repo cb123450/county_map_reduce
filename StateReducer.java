@@ -17,6 +17,7 @@ public class StateReducer extends Reducer<Text, IntWritable, Text, IntWritable> 
       }
       deathCases.set(sum);
       context.write(key, deathCases);
+      // System.out.println("key: "+key+" val: "+deathCases);
     }
 
 }
