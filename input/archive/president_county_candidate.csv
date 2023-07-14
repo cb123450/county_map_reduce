@@ -1,3 +1,4 @@
+state,county,candidate,party,total_votes,won
 Delaware,Kent County,Joe Biden,DEM,44552,True
 Delaware,Kent County,Donald Trump,REP,41009,False
 Delaware,Kent County,Jo Jorgensen,LIB,1044,False

@@ -7,23 +7,21 @@ import org.apache.hadoop.io.LongWritable;
 // state,county,candidate,party,total_votes,won
 // data is comma delimited
 
-public class MapLineToStateCandVotes extends Mapper<LongWritable, Text, Text, IntWritable> {
-  Text outKey = new Text();
-  IntWritable outValue = new IntWritable(0);
-  
+public class MapStateToCandVote extends Mapper<LongWritable, Text, TextTuple, TextTuple> {
+  TextTuple outKey = new TextTuple();
+  TextTuple outValue = new TextTuple();
+  String sortChar = "b";
+
   @Override  
   public void map(LongWritable key, Text value, Context context) 
   throws java.io.IOException, InterruptedException {
-    String[] record = value.toString().split(",");
+    String[] record = value.toString().split("_");
     String state = record[0];
-    String candidate = record[2];
-    int county_votes = Integer.parseInt(record[4]);
-    if (!candidate.equals("Joe Biden") && !candidate.equals("Donald Trump")) {
-	candidate = "Other";
-    }
-    String state_candidate = state + '_' + candidate;
-    outKey.set(state_candidate);
-    outValue.set(county_votes);
+    String[] candAndVotes = record[1].split("\t");
+    String candidate = candAndVotes[0];
+    String candVotes = candAndVotes[1];
+    outKey.set(state, sortChar);
+    outValue.set(candidate, candVotes);
     //System.out.println("key: "+outKey+" val: "+outValue);
     context.write(outKey, outValue);
   }

@@ -17,3 +17,4 @@ clean:
 
 
 # ../hadoop-3.3.6/bin/hadoop jar build.jar MapReduce ../us-counties-2020.csv output
+# ../hadoop-3.3.6/bin/hadoop jar build.jar MapReduce input/2020_election_data/president_county_candidate.csv input/2020_election_data/president_state.csv output

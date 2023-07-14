@@ -1,0 +1,35 @@
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.IntWritable;
+
+public class ReducePercentage extends Reducer<TextTuple, TextTuple, Text, Text> {
+    Text state = new Text();
+    Text candPercAndTotal = new Text();
+    Double percent = 0.0;
+    Double totalV = 0.0;
+    String line = "";
+    
+    @Override
+    public void reduce(TextTuple key, Iterable<TextTuple> values, Context context) throws java.io.IOException, InterruptedException {
+      for (TextTuple value: values) {
+	  if (value.left.toString().equals("Total Votes")) {
+	      totalV = Double.valueOf(value.right.toString()); 
+	      line += value.right.toString() + ",";
+	      continue;
+	  } else {
+	      percent = Double.valueOf(value.right.toString())/totalV;
+	      line += value.left.toString() + "-" + percent.toString() + ",";
+	      if (value.left.toString().equals("Other")) {
+		  line = line.substring(0, line.length() - 1);
+		  state = key.left;
+		  candPercAndTotal.set(line);
+		  context.write(state, candPercAndTotal);
+		  line = ""
+	      }
+	  }
+
+      }
+      //System.out.println("key: "+state+" val: "+state_votes);
+    }
+
+}
