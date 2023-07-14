@@ -22,18 +22,21 @@ public class MapReduce {
 	Path totalVote = new Path(args[2]);
 	String outputTempDir = "tempOutput";
 	String covidOutputDir = "covidOutput";
+	String secondTempDir = "secondTemp";
 	Path output = new Path(args[3]);
 	Path temp = new Path(outputTempDir);
+	Path temp2 = new Path(secondTempDir);
 	Path covidTemp = new Path(covidOutputDir);
-	main(new Configuration(), covid, stateCand, totalVote, output, temp, covidTemp);
+	main(new Configuration(), covid, stateCand, totalVote, output, temp, covidTemp, temp2);
     }
 
-    public static void main(Configuration conf, Path covid, Path stateCand, Path totalVote, Path output, Path outputTempDir, Path covidTemp) 
+    public static void main(Configuration conf, Path covid, Path stateCand, Path totalVote, Path output, Path outputTempDir, Path covidTemp, Path temp2) 
 	throws Exception {
 	
 	runCovid(covid, covidTemp, new Configuration(conf));
 	runFirstJob(stateCand, outputTempDir, new Configuration(conf));
-	secondFirstJob(outputTempDir, totalVote, output, new Configuration(conf));
+	secondFirstJob(outputTempDir, totalVote, temp2, new Configuration(conf));
+	finalFirstJob(covidTemp, temp2, output, new Configuration(conf));
     }
 
     protected static void runCovid(Path covid, Path output, Configuration conf) throws Exception {
@@ -113,5 +116,34 @@ public class MapReduce {
     
         if (job.waitForCompletion(true)) return;
         else throw new Exception("Second Job Failed");
+    }
+
+    protected static void finalFirstJob(Path covidTemp, Path secondTemp, Path output, Configuration conf) 
+        throws Exception {
+        Job job = new Job(conf);
+        job.setJarByClass(MapReduce.class);
+        job.setJobName("MapReduce Final Step");
+
+        job.setPartitionerClass(SecondarySort.SSPartitioner.class);
+        job.setGroupingComparatorClass(SecondarySort.SSGroupComparator.class);
+        job.setSortComparatorClass(SecondarySort.SSSortComparator.class);
+        
+        job.setInputFormatClass(TextInputFormat.class);
+        
+        job.setReducerClass(ReduceCovidAndVotes.class);
+        
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        MultipleInputs.addInputPath(job, covidTemp, TextInputFormat.class, MapStateToCases.class);
+        MultipleInputs.addInputPath(job, secondTemp, TextInputFormat.class, MapStateToTabledVotes.class);
+        
+        job.setMapOutputKeyClass(TextTuple.class);
+        job.setMapOutputValueClass(TextTuple.class);
+        FileOutputFormat.setOutputPath(job, output);
+    
+        if (job.waitForCompletion(true)) return;
+        else throw new Exception("Final Job Failed");
     }
 }
