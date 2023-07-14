@@ -17,20 +17,49 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 public class MapReduce {
   
     public static void main( String[] args ) throws Exception {
-	Path stateCand = new Path(args[0]);
-	Path totalVote = new Path(args[1]);
+	Path covid = new Path(args[0]);
+	Path stateCand = new Path(args[1]);
+	Path totalVote = new Path(args[2]);
 	String outputTempDir = "tempOutput";
-	Path output = new Path(args[2]);
+	String covidOutputDir = "covidOutput";
+	Path output = new Path(args[3]);
 	Path temp = new Path(outputTempDir);
-	main(new Configuration(), stateCand, totalVote, output, temp);
+	Path covidTemp = new Path(covidOutputDir);
+	main(new Configuration(), covid, stateCand, totalVote, output, temp, covidTemp);
     }
 
-    public static void main(Configuration conf, Path stateCand, Path totalVote, Path output, Path outputTempDir) 
+    public static void main(Configuration conf, Path covid, Path stateCand, Path totalVote, Path output, Path outputTempDir, Path covidTemp) 
 	throws Exception {
 	
+	runCovid(covid, covidTemp, new Configuration(conf));
 	runFirstJob(stateCand, outputTempDir, new Configuration(conf));
 	secondFirstJob(outputTempDir, totalVote, output, new Configuration(conf));
     }
+
+    protected static void runCovid(Path covid, Path output, Configuration conf) throws Exception {
+        Job job = new Job(conf);
+        job.setJarByClass(MapReduce.class);
+        job.setJobName("MapReduce Step 1");
+        
+        
+        FileInputFormat.addInputPath(job, covid);
+        job.setInputFormatClass(TextInputFormat.class);
+        
+        job.setMapperClass(CovidMapper.class);
+        job.setReducerClass(StateReducer.class);
+        
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(IntWritable.class);
+        FileOutputFormat.setOutputPath(job, output);
+    
+        if (job.waitForCompletion(true)) return;
+        else throw new Exception("Covid Job Failed");
+    }
+
 
     protected static void runFirstJob(Path stateCand, Path output, Configuration conf) 
 	throws Exception {
