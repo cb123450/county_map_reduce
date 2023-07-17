@@ -7,19 +7,19 @@ import org.apache.hadoop.io.LongWritable;
 // state,county,candidate,party,total_votes,won
 // data is comma delimited
 
-public class MapStateToCases extends Mapper<LongWritable, Text, TextTuple, TextTuple> {
+public class MapStateToTabledVotes extends Mapper<LongWritable, Text, TextTuple, TextTuple> {
   TextTuple outKey = new TextTuple();
   TextTuple outValue = new TextTuple();
-  String sortChar = "c";
+  String sortChar = "a";
 
   @Override  
   public void map(LongWritable key, Text value, Context context) 
   throws java.io.IOException, InterruptedException {
     String[] record = value.toString().split("\t");
     String state = record[0];
-    String cases = record[1];
+    String voteInfo = record[1];
     outKey.set(state, sortChar);
-    outValue.set("Cases", cases);
+    outValue.set("Voting Info", voteInfo);
     //System.out.println("key: "+outKey+" val: "+outValue);
     context.write(outKey, outValue);
   }
