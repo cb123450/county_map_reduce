@@ -10,7 +10,7 @@ import org.apache.hadoop.io.LongWritable;
 public class MapStateToCases extends Mapper<LongWritable, Text, TextTuple, TextTuple> {
   TextTuple outKey = new TextTuple();
   TextTuple outValue = new TextTuple();
-  String sortChar = "b";
+  String sortChar = "c";
 
   @Override  
   public void map(LongWritable key, Text value, Context context) 

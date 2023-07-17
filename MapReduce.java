@@ -20,29 +20,26 @@ public class MapReduce {
 	Path covid = new Path(args[0]);
 	Path stateCand = new Path(args[1]);
 	Path totalVote = new Path(args[2]);
-	String outputTempDir = "tempOutput";
+	String outputStateDir = "stateOutput";
 	String covidOutputDir = "covidOutput";
-	String secondTempDir = "secondTemp";
 	Path output = new Path(args[3]);
-	Path temp = new Path(outputTempDir);
-	Path temp2 = new Path(secondTempDir);
+	Path stateTemp = new Path(outputStateDir);
 	Path covidTemp = new Path(covidOutputDir);
-	main(new Configuration(), covid, stateCand, totalVote, output, temp, covidTemp, temp2);
+	main(new Configuration(), covid, stateCand, totalVote, output, stateTemp, covidTemp);
     }
 
-    public static void main(Configuration conf, Path covid, Path stateCand, Path totalVote, Path output, Path outputTempDir, Path covidTemp, Path temp2) 
+    public static void main(Configuration conf, Path covid, Path stateCand, Path totalVote, Path output, Path stateTemp, Path covidTemp) 
 	throws Exception {
 	
-	runCovid(covid, covidTemp, new Configuration(conf));
-	runFirstJob(stateCand, outputTempDir, new Configuration(conf));
-	secondFirstJob(outputTempDir, totalVote, temp2, new Configuration(conf));
-	finalFirstJob(covidTemp, temp2, output, new Configuration(conf));
+	covidJob(covid, covidTemp, new Configuration(conf));
+	stateCandJob(stateCand, stateTemp, new Configuration(conf));
+	finalJob(stateTemp, totalVote, covidTemp, output, new Configuration(conf));
     }
 
-    protected static void runCovid(Path covid, Path output, Configuration conf) throws Exception {
+    protected static void covidJob(Path covid, Path output, Configuration conf) throws Exception {
         Job job = new Job(conf);
         job.setJarByClass(MapReduce.class);
-        job.setJobName("MapReduce Step 1");
+        job.setJobName("MapReduce Step Covid");
         
         
         FileInputFormat.addInputPath(job, covid);
@@ -64,11 +61,11 @@ public class MapReduce {
     }
 
 
-    protected static void runFirstJob(Path stateCand, Path output, Configuration conf) 
+    protected static void stateCandJob(Path stateCand, Path output, Configuration conf) 
 	throws Exception {
 	Job job = new Job(conf);
 	job.setJarByClass(MapReduce.class);
-	job.setJobName("MapReduce Step 1");
+	job.setJobName("MapReduce Step Cand Job");
 	
 	
 	FileInputFormat.addInputPath(job, stateCand);
@@ -86,14 +83,14 @@ public class MapReduce {
 	FileOutputFormat.setOutputPath(job, output);
     
 	if (job.waitForCompletion(true)) return;
-	else throw new Exception("First Job Failed");
+	else throw new Exception("State Cand Job Failed");
     }
 
-    protected static void secondFirstJob(Path outputTempDir, Path totalVote, Path output, Configuration conf) 
+    protected static void finalJob(Path stateCandDir, Path totalVote, Path covidTemp, Path output, Configuration conf) 
         throws Exception {
         Job job = new Job(conf);
         job.setJarByClass(MapReduce.class);
-        job.setJobName("MapReduce Step 2");
+        job.setJobName("MapReduce Step Final");
 
 	job.setPartitionerClass(SecondarySort.SSPartitioner.class);
 	job.setGroupingComparatorClass(SecondarySort.SSGroupComparator.class);
@@ -107,15 +104,16 @@ public class MapReduce {
         job.setOutputValueClass(Text.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-	MultipleInputs.addInputPath(job, outputTempDir, TextInputFormat.class, MapStateToCandVote.class);
+	MultipleInputs.addInputPath(job, stateCandDir, TextInputFormat.class, MapStateToCandVote.class);
 	MultipleInputs.addInputPath(job, totalVote, TextInputFormat.class, MapTotalVotes.class);
-	
+	MultipleInputs.addInputPath(job, covidTemp, TextInputFormat.class, MapStateToCases.class);
+
         job.setMapOutputKeyClass(TextTuple.class);
         job.setMapOutputValueClass(TextTuple.class);
         FileOutputFormat.setOutputPath(job, output);
     
         if (job.waitForCompletion(true)) return;
-        else throw new Exception("Second Job Failed");
+        else throw new Exception("Final Job Failed");
     }
 
     protected static void finalFirstJob(Path covidTemp, Path secondTemp, Path output, Configuration conf) 

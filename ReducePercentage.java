@@ -4,7 +4,7 @@ import org.apache.hadoop.io.IntWritable;
 
 public class ReducePercentage extends Reducer<TextTuple, TextTuple, Text, Text> {
     Text state = new Text();
-    Text candPercAndTotal = new Text();
+    Text voteInfoAndCases = new Text();
     Double percent = 0.0;
     Double totalV = 0.0;
     String line = "";
@@ -16,18 +16,17 @@ public class ReducePercentage extends Reducer<TextTuple, TextTuple, Text, Text> 
 	      totalV = Double.valueOf(value.right.toString()); 
 	      line += value.right.toString() + ",";
 	      continue;
+	  } else if(value.left.toString().equals("Cases")) {
+	      line += value.right.toString();
+              state = key.left;
+              voteInfoAndCases.set(line);
+              context.write(state, voteInfoAndCases);
+              line = "";
+
 	  } else {
 	      percent = Double.valueOf(value.right.toString())/totalV;
 	      line += value.left.toString() + "-" + percent.toString() + ",";
-	      if (value.left.toString().equals("Other")) {
-		  line = line.substring(0, line.length() - 1);
-		  state = key.left;
-		  candPercAndTotal.set(line);
-		  context.write(state, candPercAndTotal);
-		  line = "";
-	      }
 	  }
-
       }
       //System.out.println("key: "+state+" val: "+state_votes);
     }
