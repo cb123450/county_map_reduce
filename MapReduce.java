@@ -22,13 +22,13 @@ public class MapReduce {
 	Path totalVote = new Path(args[2]);
 	Path output = new Path(args[3]);
 	
-	main(new Configuration(), covid, stateCand, totalVote, output);
+	main(new Configuration(), covid, countyCand, totalVote, output);
     }
 
     public static void main(Configuration conf, Path covid, Path countyCand, Path totalVote, Path output) 
 	throws Exception {
 	
-	totalJob(stateTemp, totalVote, covidTemp, output, new Configuration(conf));
+	totalJob(covid, countyCand, totalVote, output, new Configuration(conf));
     }
     
     protected static void totalJob(Path covid, Path countyCand, Path totalVote, Path output, Configuration conf) 
