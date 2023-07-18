@@ -3,7 +3,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.LongWritable;
 
-//input: date,county,state,cases,deaths,_
+// a line contains these fields:
+// state,county,candidate,party,total_votes,won
+// data is comma delimited
 
 public class MapStateToTabledVotes extends Mapper<LongWritable, Text, TextTuple, TextTuple> {
   TextTuple outKey = new TextTuple();
